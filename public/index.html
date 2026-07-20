@@ -1,0 +1,17 @@
+// Dentro del script de tu index.html
+const API_URL = '/api'; // Ahora apunta a las rutas con prefijo /api
+
+// Cuando renderices la imagen en el JS del HTML:
+function renderGrid(exercises) {
+    grid.innerHTML = exercises.map(ex => `
+        <div class="exercise-card bg-gray-800 rounded-xl overflow-hidden border border-gray-700 cursor-pointer" 
+             onclick="openModal('${ex.id}')">
+            <!-- La ruta ya viene como "videos/0001.gif" desde la DB -->
+            <img src="${ex.gif_url}" class="w-full h-48 object-cover bg-white" onerror="this.src='https://via.placeholder.com/300'">
+            <div class="p-4">
+                <span class="text-blue-500 text-xs font-bold uppercase">${ex.body_part}</span>
+                <h3 class="text-lg font-bold mt-1 truncate">${ex.name}</h3>
+            </div>
+        </div>
+    `).join('');
+}
