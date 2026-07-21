@@ -3,71 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness App | Trainer</title>
+    <title>Fitness Explorer | Global DB</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .card:hover { transform: translateY(-5px); transition: 0.3s; }
+        .card-zoom:hover img { transform: scale(1.1); }
+        .card-zoom img { transition: transform 0.5s ease; }
         .loader { border-top-color: #3b82f6; animation: spinner 1s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen">
+<body class="bg-slate-950 text-slate-200 min-h-screen">
 
-    <header class="bg-slate-800 p-4 sticky top-0 z-50 border-b border-slate-700">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 class="text-2xl font-black text-blue-500 tracking-tighter italic">FITNESS<span class="text-white">DB</span></h1>
-            <div class="flex gap-2 w-full md:w-auto">
-                <select id="filter-part" class="bg-slate-700 border-none rounded-lg px-3 py-2 text-sm w-full">
-                    <option value="">Cualquier parte del cuerpo</option>
+    <!-- Navbar -->
+    <header class="bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-800">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <h1 class="text-2xl font-black text-blue-500 tracking-tighter italic">FITNESS<span class="text-white">GLOBAL</span></h1>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <!-- Selector de Idioma -->
+                <div class="relative">
+                    <i class="fas fa-language absolute left-3 top-2.5 text-slate-400"></i>
+                    <select id="lang-select" class="bg-slate-800 border-none rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="zh">中文</option>
+                        <option value="it">Italiano</option>
+                        <option value="ru">Pусский</option>
+                    </select>
+                </div>
+                <!-- Filtro de Parte del Cuerpo -->
+                <select id="filter-part" class="bg-slate-800 border-none rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Todo el cuerpo</option>
                 </select>
-                <button id="btn-random" class="bg-blue-600 hover:bg-blue-500 p-2 rounded-lg"><i class="fas fa-random"></i></button>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-6">
-        <div class="relative max-w-xl mx-auto mb-8">
-            <input type="text" id="search" placeholder="Busca un ejercicio..." class="w-full bg-slate-800 border border-slate-700 rounded-full py-3 px-12 focus:ring-2 focus:ring-blue-500 outline-none">
-            <i class="fas fa-search absolute left-4 top-4 text-slate-500"></i>
+    <main class="container mx-auto px-4 py-8">
+        <!-- Buscador -->
+        <div class="relative max-w-2xl mx-auto mb-10">
+            <input type="text" id="search" placeholder="Escribe el nombre de un ejercicio..." 
+                class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-12 focus:ring-2 focus:ring-blue-500 outline-none shadow-2xl transition-all">
+            <i class="fas fa-search absolute left-4 top-5 text-slate-500"></i>
         </div>
 
-        <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Cargando... -->
+        <!-- Grid de Ejercicios -->
+        <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></div>
+
+        <!-- Loader -->
+        <div id="loading" class="flex flex-col items-center justify-center my-20">
+            <div class="loader rounded-full border-4 border-t-4 border-slate-800 h-16 w-16 mb-4"></div>
+            <p class="text-slate-500 animate-pulse">Cargando 1,324 ejercicios...</p>
         </div>
 
-        <div id="loading" class="flex justify-center my-20">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-700 h-12 w-12"></div>
-        </div>
-
-        <div class="flex justify-center mt-10 gap-4 pb-10">
-            <button id="prev" class="bg-slate-800 px-5 py-2 rounded-lg disabled:opacity-30">Anterior</button>
-            <span id="page-txt" class="py-2 font-mono text-blue-400"></span>
-            <button id="next" class="bg-slate-800 px-5 py-2 rounded-lg disabled:opacity-30">Siguiente</button>
+        <!-- Paginación -->
+        <div class="flex justify-center items-center mt-12 gap-6 pb-20">
+            <button id="prev" class="bg-slate-800 hover:bg-blue-600 p-4 rounded-full disabled:opacity-20 transition-all shadow-lg"><i class="fas fa-chevron-left"></i></button>
+            <span id="page-txt" class="font-mono text-xl font-bold text-blue-400"></span>
+            <button id="next" class="bg-slate-800 hover:bg-blue-600 p-4 rounded-full disabled:opacity-20 transition-all shadow-lg"><i class="fas fa-chevron-right"></i></button>
         </div>
     </main>
 
-    <!-- Modal de Detalles -->
-    <div id="modal" class="fixed inset-0 bg-black/90 hidden z-[60] flex items-center justify-center p-4">
-        <div class="bg-slate-800 w-full max-w-2xl rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <h2 id="m-name" class="text-2xl font-bold text-blue-400"></h2>
-                    <button onclick="closeM()" class="text-2xl">&times;</button>
-                </div>
-                <img id="m-img" src="" class="w-full bg-white rounded-xl mb-4">
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="bg-slate-700 p-3 rounded-lg text-center">
-                        <p class="text-xs text-slate-400 uppercase">Equipo</p>
-                        <p id="m-eq" class="font-bold text-sm"></p>
+    <!-- Modal Pro -->
+    <div id="modal" class="fixed inset-0 bg-slate-950/95 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-800 max-h-[90vh] flex flex-col md:flex-row">
+            <button onclick="closeM()" class="absolute top-6 right-6 bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-10">&times;</button>
+            
+            <div class="md:w-1/2 bg-white flex items-center justify-center p-4">
+                <img id="m-img" src="" class="max-w-full h-auto">
+            </div>
+            
+            <div class="md:w-1/2 p-8 overflow-y-auto">
+                <span id="m-part" class="text-blue-500 text-xs font-black uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full"></span>
+                <h2 id="m-name" class="text-3xl font-black text-white mt-4 mb-6 leading-tight"></h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Equipamiento</p>
+                        <p id="m-eq" class="text-sm font-semibold text-slate-200 uppercase"></p>
                     </div>
-                    <div class="bg-slate-700 p-3 rounded-lg text-center">
-                        <p class="text-xs text-slate-400 uppercase">Objetivo</p>
-                        <p id="m-tr" class="font-bold text-sm"></p>
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Músculo Objetivo</p>
+                        <p id="m-tr" class="text-sm font-semibold text-slate-200 uppercase"></p>
                     </div>
                 </div>
-                <h3 class="font-bold mb-2">Instrucciones:</h3>
-                <p id="m-inst" class="text-slate-400 text-sm leading-relaxed"></p>
+
+                <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-white">
+                    <i class="fas fa-list-ol text-blue-500"></i> Instrucciones
+                </h3>
+                <div id="m-inst" class="text-slate-400 text-sm leading-relaxed space-y-3"></div>
             </div>
         </div>
     </div>
@@ -77,84 +104,105 @@
         let filtered = [];
         let page = 1;
         const perPage = 12;
-        const ASSETS = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/";
+        let currentLang = 'es';
 
-        // 1. Cargar Datos
-        async function load() {
+        // URL base del repositorio original para assets
+        const ASSETS_BASE = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/";
+
+        async function init() {
             try {
                 const r = await fetch('./data/exercises.json');
                 db = await r.json();
                 filtered = db;
-                
-                // Llenar filtro de partes
+
+                // Llenar selector de partes del cuerpo
                 const parts = [...new Set(db.map(x => x.body_part))].sort();
-                parts.forEach(p => {
-                    document.getElementById('filter-part').innerHTML += `<option value="${p}">${p}</option>`;
-                });
+                const select = document.getElementById('filter-part');
+                parts.forEach(p => select.innerHTML += `<option value="${p}">${p}</option>`);
 
                 document.getElementById('loading').classList.add('hidden');
                 render();
-            } catch (e) { alert("Error cargando ejercicios. Verifica la carpeta /data"); }
+            } catch (e) {
+                console.error("Error cargando el JSON local:", e);
+                alert("Error: Asegúrate de que el archivo data/exercises.json exista en tu repo.");
+            }
         }
 
-        // 2. Mostrar Ejercicios
         function render() {
             const start = (page - 1) * perPage;
-            const end = start + perPage;
-            const items = filtered.slice(start, end);
-
+            const items = filtered.slice(start, start + perPage);
             const grid = document.getElementById('grid');
+
             grid.innerHTML = items.map(ex => `
-                <div class="card bg-slate-800 rounded-xl overflow-hidden border border-slate-700 cursor-pointer" onclick="openM('${ex.id}')">
-                    <img src="${ASSETS}${ex.id}.gif" class="w-full h-48 object-cover bg-white" loading="lazy">
-                    <div class="p-4">
-                        <p class="text-blue-500 text-[10px] font-bold uppercase">${ex.body_part}</p>
-                        <h3 class="font-bold text-sm line-clamp-1">${ex.name}</h3>
+                <div class="card-zoom bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 cursor-pointer shadow-xl group hover:border-blue-500/50 transition-all" onclick="openM('${ex.id}')">
+                    <div class="relative h-64 overflow-hidden bg-white">
+                        <img src="${ASSETS_BASE}videos/${ex.id}.gif" class="w-full h-full object-contain" loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-blue-500 text-[10px] font-black uppercase tracking-widest">${ex.body_part}</span>
+                            <span class="text-slate-600 text-[10px] font-bold">#${ex.id}</span>
+                        </div>
+                        <h3 class="text-white font-bold text-lg group-hover:text-blue-400 transition-colors line-clamp-1">${ex.name}</h3>
+                        <p class="text-slate-500 text-xs mt-2 italic">${ex.equipment}</p>
                     </div>
                 </div>
             `).join('');
 
-            const totalPages = Math.ceil(filtered.length / perPage);
-            document.getElementById('page-txt').innerText = `${page} / ${totalPages || 1}`;
+            const total = Math.ceil(filtered.length / perPage);
+            document.getElementById('page-txt').innerText = `${page} de ${total || 1}`;
             document.getElementById('prev').disabled = page === 1;
-            document.getElementById('next').disabled = page >= totalPages;
+            document.getElementById('next').disabled = page >= total;
         }
 
-        // 3. Filtrar
         function filter() {
-            const query = document.getElementById('search').value.toLowerCase();
-            const part = document.getElementById('filter-part').value;
-
-            filtered = db.filter(ex => {
-                return ex.name.toLowerCase().includes(query) && 
-                       (part === "" || ex.body_part === part);
-            });
-
+            const q = document.getElementById('search').value.toLowerCase();
+            const p = document.getElementById('filter-part').value;
+            
+            filtered = db.filter(ex => 
+                ex.name.toLowerCase().includes(q) && (p === "" || ex.body_part === p)
+            );
             page = 1;
             render();
         }
 
-        // 4. Modal
         function openM(id) {
             const ex = db.find(x => x.id === id);
+            currentLang = document.getElementById('lang-select').value;
+            
             document.getElementById('m-name').innerText = ex.name;
-            document.getElementById('m-img').src = `${ASSETS}${ex.id}.gif`;
+            document.getElementById('m-img').src = `${ASSETS_BASE}videos/${ex.id}.gif`;
+            document.getElementById('m-part').innerText = ex.body_part;
             document.getElementById('m-eq').innerText = ex.equipment;
             document.getElementById('m-tr').innerText = ex.target;
-            document.getElementById('m-inst').innerText = Array.isArray(ex.instructions_en) ? ex.instructions_en.join(' ') : ex.instructions_en;
+
+            // Obtener instrucciones según idioma seleccionado
+            // El dataset usa campos como: instructions_es, instructions_en, instructions_zh, etc.
+            const field = `instructions_${currentLang}`;
+            const inst = ex[field] || ex.instructions_en || ["No instructions available."];
+            
+            document.getElementById('m-inst').innerHTML = inst.map(step => 
+                `<p class="flex gap-3"><span class="text-blue-500 font-bold">•</span> ${step}</p>`
+            ).join('');
+
             document.getElementById('modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
 
-        function closeM() { document.getElementById('modal').classList.add('hidden'); }
+        function closeM() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.body.style.overflow = 'auto';
+        }
 
-        // Eventos
-        document.getElementById('search').oninput = filter;
-        document.getElementById('filter-part').onchange = filter;
-        document.getElementById('next').onclick = () => { page++; render(); window.scrollTo(0,0); };
-        document.getElementById('prev').onclick = () => { page--; render(); window.scrollTo(0,0); };
-        document.getElementById('btn-random').onclick = () => openM(db[Math.floor(Math.random()*db.length)].id);
+        // Listeners
+        document.getElementById('search').addEventListener('input', filter);
+        document.getElementById('filter-part').addEventListener('change', filter);
+        document.getElementById('lang-select').addEventListener('change', () => { if(!document.getElementById('modal').classList.contains('hidden')) { /* refrescar modal si está abierto */ } });
+        document.getElementById('next').onclick = () => { page++; render(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+        document.getElementById('prev').onclick = () => { page--; render(); window.scrollTo({top: 0, behavior: 'smooth'}); };
 
-        load();
+        init();
     </script>
 </body>
 </html>
